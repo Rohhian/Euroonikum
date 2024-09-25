@@ -1,12 +1,39 @@
 table {
-    width: 100%;
     border-collapse: collapse;
+    table-layout: auto;
 }
+
 th, td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
 }
+
 th {
     background-color: #f2f2f2;
+}
+
+#categoriesTable {
+    font-size: 10px;
+}
+
+#categoriesTable a {
+    font-size: 10px;
+}
+
+#categoriesTable td, #categoriesTable th {
+    padding: 2px;
+}
+
+#header-container {
+    display: flex;
+    align-items: center;
+}
+
+#table-container div {
+    margin-bottom: 20px; /* Add some space below the header container */
+}
+
+#table-container h1 {
+    margin-right: 10px; /* Add some space between the heading and the button */
 }
