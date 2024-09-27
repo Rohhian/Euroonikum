@@ -6,10 +6,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $value = $input['value'] ?? null;
 
-    if ($value !== 'true') {
-        echo json_encode('Invalid value sent with buttonclick.');
+    if (!$value) {
         exit();
-    } elseif ($value === 'true') {
+    } elseif ($value === 'normalScrape') {
+        require_once 'scraperNormal.php';
+    } elseif ($value === 'slowScrape') {
         require_once 'scraperSlowNextPage.php';
     }
 } else {

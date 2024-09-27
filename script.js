@@ -6,18 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const heading = document.createElement('h1');
     heading.textContent = 'Euronics e-poe toodete kategooriad';
 
-    const button = document.createElement('button');
-    button.textContent = 'tõmba kategooriad';
-    button.addEventListener('click', () => getCategories('true'));
+    const buttonNormalScrape = document.createElement('button');
+    buttonNormalScrape.textContent = 'normal scrape 5m';
+    buttonNormalScrape.addEventListener('click', () => getCategories('normalScrape'));
+
+    const buttonSlowScrape = document.createElement('button');
+    buttonSlowScrape.textContent = 'slow scrape 20m';
+    buttonSlowScrape.addEventListener('click', () => getCategories('slowScrape'));
 
     headerContainer.appendChild(heading);
-    headerContainer.appendChild(button);
+    headerContainer.appendChild(buttonNormalScrape);
+    headerContainer.appendChild(buttonSlowScrape);
 
     const container = document.getElementById('table-container');
     container.appendChild(headerContainer);
 
     function getCategories(value) {
-        fetch('scraper.php', {
+        fetch('login_router.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -48,9 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             data.forEach(category => {
                 const categoryRow = document.createElement('tr');
+                categorySum = 0;
                 categoryRow.innerHTML = `
                     <td class="headingrow">${category.name}</a></td>
-                    <td class="headingrow">kogus</td>
+                    <td class="headingrow">${categorySum}</td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
@@ -61,11 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
                 category.sub_categories.forEach(subCategory => {
                     const subCategoryRow = document.createElement('tr');
+                    categorySum = categorySum + subCategory.productsCount;
                     subCategoryRow.innerHTML = `
                         <td></td>
                         <td></td>
                         <td class="headingrow"><a href="${subCategory.link}">${subCategory.name}</a></td>
-                        <td class="headingrow">kogus</td>
+                        <td class="headingrow">${subCategory.productsCount}</td>
                         <td class="headingrow"></td>
                         <td class="headingrow"></td>
                         <td class="headingrow"></td>
@@ -81,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td></td>
                             <td class="headingrow"><a href="${subItem.link}">${subItem.name}</a></td>
                             <td class="headingrow">${subItem.productsCount}</td>
-                            <td class="headingrow">${subItem.soodushindCount}</td>
+                            <td class="headingrow">${subItem.discountCount}</td>
                         `;
                         tableBody.appendChild(subItemRow);
                     });

@@ -68,51 +68,68 @@ function fetchPageContent($url) {
     return file_get_contents($url, false, $context);
 }
 
-function getNextPageUrl($dom, $xpath) {
-    $nextActionNode = $xpath->query('//*[@id="nextAnchor"]')->item(0);
-    if ($nextActionNode) {
-        return $nextActionNode->getAttribute('href') . '&p=1';
-    }
-    return null;
-}
-
-function countProductsAndDiscounts($dom, $xpath) {
-    $productNodes = $xpath->query('//article[contains(@class, "product-card vertical")]');
-    $productsCount = $productNodes->length;
-
-    $discountCount = 0;
-    foreach ($productNodes as $productNode) {
-        if (strpos($productNode->textContent, 'Soodushind') !== false) {
-            $discountCount++;
-        }
-    }
-
-    return [$productsCount, $discountCount];
-}
-
 foreach ($categories as &$cat) {
     foreach ($cat['sub_categories'] as &$subcat) {
+        $url = $subcat['link'];
+        $productsCount = 0;
+        $discountCount = 0;
+    
+        $html = fetchPageContent($url);
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html);
+        libxml_clear_errors();
+
+        $xpath = new DOMXPath($dom);
+
+        $productsCountNode = $xpath->query('//h2[normalize-space(text())="Filtreeri tooteid"]/span[@class="counter"]');
+        if ($productsCountNode->length > 0) {
+            $productsCountText = $productsCountNode->item(0)->nodeValue;
+            $productsCountText = trim($productsCountText);
+            $productsCountText = preg_replace('/[()]/', '', $productsCountText);
+            $productsCount = (int)($productsCountText);
+        }
+
+        $discountsCountNode = $xpath->query('//label[normalize-space(text())="Sooduspakkumised"]/span[@class="counter"]');
+        if ($discountsCountNode->length > 0) {
+            $discountsCountText = $discountsCountNode->item(0)->nodeValue;
+            $discountsCountText = trim($discountsCountText);
+            $discountsCountText = preg_replace('/[()]/', '', $discountsCountText);
+            $discountCount = (int)($discountsCountText);
+        }
+
+        $subcat['productsCount'] = $productsCount;
+        $subcat['discountCount'] = $discountCount;
+
         foreach ($subcat['sub_items'] as &$bottomitem) {
             $url = $bottomitem['link'];
             $productsCount = 0;
             $discountCount = 0;
         
-            do {
-                $html = fetchPageContent($url);
-                $dom = new DOMDocument();
-                libxml_use_internal_errors(true);
-                $dom->loadHTML($html);
-                libxml_clear_errors();
-        
-                $xpath = new DOMXPath($dom);
-            
-                $url = getNextPageUrl($dom, $xpath);
-            } while ($url);
+            $html = fetchPageContent($url);
+            $dom = new DOMDocument();
+            libxml_use_internal_errors(true);
+            $dom->loadHTML($html);
+            libxml_clear_errors();
 
-            list($pageProductsCount, $pageDiscountCount) = countProductsAndDiscounts($dom, $xpath);
-            $productsCount += $pageProductsCount;
-            $discountCount += $pageDiscountCount;
-        
+            $xpath = new DOMXPath($dom);
+
+            $productsCountNode = $xpath->query('//h2[normalize-space(text())="Filtreeri tooteid"]/span[@class="counter"]');
+            if ($productsCountNode->length > 0) {
+                $productsCountText = $productsCountNode->item(0)->nodeValue;
+                $productsCountText = trim($productsCountText);
+                $productsCountText = preg_replace('/[()]/', '', $productsCountText);
+                $productsCount = (int)($productsCountText);
+            }
+
+            $discountsCountNode = $xpath->query('//label[normalize-space(text())="Sooduspakkumised"]/span[@class="counter"]');
+            if ($discountsCountNode->length > 0) {
+                $discountsCountText = $discountsCountNode->item(0)->nodeValue;
+                $discountsCountText = trim($discountsCountText);
+                $discountsCountText = preg_replace('/[()]/', '', $discountsCountText);
+                $discountCount = (int)($discountsCountText);
+            }
+
             $bottomitem['productsCount'] = $productsCount;
             $bottomitem['discountCount'] = $discountCount;
         }
