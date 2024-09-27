@@ -51,9 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tableBody = table.createTBody();
 
+            categorySum = 0;
+
             data.forEach(category => {
                 const categoryRow = document.createElement('tr');
-                categorySum = 0;
                 categoryRow.innerHTML = `
                     <td class="headingrow">${category.name}</a></td>
                     <td class="headingrow">${categorySum}</td>
@@ -87,8 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td></td>
                             <td></td>
                             <td class="headingrow"><a href="${subItem.link}">${subItem.name}</a></td>
-                            <td class="headingrow">${subItem.productsCount}</td>
-                            <td class="headingrow">${subItem.discountCount}</td>
+                            <td class="headingrow pdcount">${subItem.productsCount}</td>
+                            <td class="headingrow pdcount">${subItem.discountCount}</td>
                         `;
                         tableBody.appendChild(subItemRow);
                     });

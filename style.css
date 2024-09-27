@@ -32,13 +32,17 @@ table {
 }
 
 #table-container div {
-    margin-bottom: 20px; /* Add some space below the header container */
+    margin-bottom: 20px;
 }
 
 #table-container h1 {
-    margin-right: 10px; /* Add some space between the heading and the button */
+    margin-right: 10px;
 }
 
 .headingrow {
     background-color: #e7e6e6;
+}
+
+.pdcount {
+    text-align: center;
 }
