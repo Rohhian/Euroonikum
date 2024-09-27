@@ -1,4 +1,5 @@
 <?php
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $value = $input['value'] ?? null;
@@ -9,11 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $url = file_get_contents('url.txt');
-    if ($url === FALSE) {
+    if ($url === false) {
         die('Error reading the URL from url.txt.');
     }
     $html = file_get_contents(trim($url));
-    if ($html === FALSE) {
+    if ($html === false) {
         die('Error fetching the HTML content.');
     }
 
@@ -25,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $xpath = new DOMXPath($dom);
     $categories = [];
 
-    $mainItems = $xpath->query('//li[contains(@class, "main-nav__item")]');
+    $mainItems = $xpath->query("//li[contains(@class, 'main-nav__item')][contains(@data-responsive-panel-target, 'sub-menu')]");
 
     foreach ($mainItems as $item) {
         $categoryNode = $xpath->query('.//h2[contains(@class, "sub-menu__title")]', $item)->item(0);
@@ -48,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'name' => trim($bottomLink->nodeValue),
                             'link' => ($bottomLink instanceof DOMElement) ? $bottomLink->getAttribute('href') : '',
                         ];
-
                 }
 
                 $subCategories[] = [
@@ -71,4 +71,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode('Error: Invalid request method.');
     die();
 }
-?>
