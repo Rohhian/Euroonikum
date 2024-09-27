@@ -45,10 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bottomItems = [];
                 $bottomLevelLinks = $xpath->query('.//li[contains(@class, "bottom-level__item")]/a[contains(@class, "bottom-level__item__title")]', $subBlock);
                 foreach ($bottomLevelLinks as $bottomLink) {
-                        $bottomItems[] = [
-                            'name' => trim($bottomLink->nodeValue),
-                            'link' => ($bottomLink instanceof DOMElement) ? $bottomLink->getAttribute('href') : '',
-                        ];
+                    if (strpos($bottomLink->nodeValue, 'õik') !== false) {
+                        continue; // Skip this item if it contains "Kõik"
+                    }
+                    $bottomItems[] = [
+                        'name' => trim($bottomLink->nodeValue),
+                        'link' => ($bottomLink instanceof DOMElement) ? $bottomLink->getAttribute('href') : '',
+                    ];
                 }
 
                 $subCategories[] = [

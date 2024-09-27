@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const header = table.createTHead();
             const headerRow = header.insertRow();
-            const headers = ['Kategooria', 'Tooteid', 'Alam-kategooria', 'Tooteid', 'Alam-alam-kategooria', 'Tooteid'];
+            const headers = ['Kategooria', 'tooteid', 'Alam-kategooria', 'tooteid', 'Alam-alam-kategooria', 'tooteid'];
             headers.forEach(text => {
                 const cell = document.createElement('th');
                 cell.textContent = text;
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data.forEach(category => {
                 const categoryRow = document.createElement('tr');
                 categoryRow.innerHTML = `
-                    <td class="headingrow"><a href="${category.link}">${category.name}</a></td>
+                    <td class="headingrow">${category.name}</a></td>
                     <td class="headingrow">kogus</td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
