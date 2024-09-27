@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($value !== 'true') {
         echo json_encode('Invalid value sent with buttonclick.');
         exit();
-    } elseif ($value !== 'true') {
+    } elseif ($value === 'true') {
         require_once 'scraperSlowNextPage.php';
     }
 } else {
