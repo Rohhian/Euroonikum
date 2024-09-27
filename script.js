@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     heading.textContent = 'Euronics e-poe toodete kategooriad';
 
     const buttonNormalScrape = document.createElement('button');
-    buttonNormalScrape.textContent = 'normal scrape 5m';
+    buttonNormalScrape.textContent = 'normal scrape 6m';
     buttonNormalScrape.addEventListener('click', () => getCategories('normalScrape'));
 
     const buttonSlowScrape = document.createElement('button');
@@ -51,13 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tableBody = table.createTBody();
 
-            categorySum = 0;
-
             data.forEach(category => {
+                let categorySum = 0;
                 const categoryRow = document.createElement('tr');
                 categoryRow.innerHTML = `
                     <td class="headingrow">${category.name}</a></td>
-                    <td class="headingrow">${categorySum}</td>
+                    <td class="headingrow categorySum"></td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
@@ -65,10 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="headingrow"></td>
                 `;
                 tableBody.appendChild(categoryRow);
+
+                const categorySumElement = categoryRow.querySelector('.categorySum');
     
                 category.sub_categories.forEach(subCategory => {
-                    const subCategoryRow = document.createElement('tr');
                     categorySum = categorySum + subCategory.productsCount;
+                    categorySumElement.innerHTML = `${categorySum}`;
+                    const subCategoryRow = document.createElement('tr');
                     subCategoryRow.innerHTML = `
                         <td></td>
                         <td></td>
