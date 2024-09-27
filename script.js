@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const header = table.createTHead();
             const headerRow = header.insertRow();
-            const headers = ['Kategooria', 'tooteid', 'Alam-kategooria', 'tooteid', 'Alam-alam-kategooria', 'tooteid'];
+            const headers = ['Kategooria', 'tooteid', 'Alam-kategooria', 'tooteid', 'Alam-alam-kategooria', 'tooteid', 'soodushinnaga'];
             headers.forEach(text => {
                 const cell = document.createElement('th');
                 cell.textContent = text;
@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
+                    <td class="headingrow"></td>
                 `;
                 tableBody.appendChild(categoryRow);
     
@@ -65,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td></td>
                         <td class="headingrow"><a href="${subCategory.link}">${subCategory.name}</a></td>
                         <td class="headingrow">kogus</td>
+                        <td class="headingrow"></td>
                         <td class="headingrow"></td>
                         <td class="headingrow"></td>
                     `;
@@ -78,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td></td>
                             <td></td>
                             <td class="headingrow"><a href="${subItem.link}">${subItem.name}</a></td>
-                            <td class="headingrow">kogus</td>
+                            <td class="headingrow">${subItem.productsCount}</td>
+                            <td class="headingrow">${subItem.soodushindCount}</td>
                         `;
                         tableBody.appendChild(subItemRow);
                     });
@@ -86,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const blankRow = document.createElement('tr');
                 const blankCell = document.createElement('td');
-                blankCell.colSpan = 6;
+                blankCell.colSpan = 7;
                 blankCell.innerHTML = '&nbsp;';
                 blankRow.appendChild(blankCell);
                 tableBody.appendChild(blankRow);

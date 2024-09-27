@@ -1,11 +1,13 @@
 <?php
 
+set_time_limit(300);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $value = $input['value'] ?? null;
 
     if ($value !== 'true') {
-        echo json_encode('Error: Invalid value sent with buttonclick.');
+        echo json_encode('Invalid value sent with buttonclick.');
         exit();
     }
 
@@ -25,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $xpath = new DOMXPath($dom);
     $categories = [];
-
     $mainItems = $xpath->query("//li[contains(@class, 'main-nav__item')][contains(@data-responsive-panel-target, 'sub-menu')]");
 
     foreach ($mainItems as $item) {
@@ -46,12 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bottomLevelLinks = $xpath->query('.//li[contains(@class, "bottom-level__item")]/a[contains(@class, "bottom-level__item__title")]', $subBlock);
                 foreach ($bottomLevelLinks as $bottomLink) {
                     if (strpos($bottomLink->nodeValue, 'õik') !== false) {
-                        continue; // Skip this item if it contains "Kõik"
+                        continue;
                     }
-                    $bottomItems[] = [
+                    $bottomItem = [
                         'name' => trim($bottomLink->nodeValue),
                         'link' => ($bottomLink instanceof DOMElement) ? $bottomLink->getAttribute('href') : '',
                     ];
+                    $bottomItems[] = $bottomItem;
                 }
 
                 $subCategories[] = [
@@ -66,6 +68,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'name' => $categoryName,
             'sub_categories' => $subCategories,
         ];
+    }
+
+    function fetchPageContent($url) {
+        $context = stream_context_create(array(
+            'http' => array(
+                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            )
+        ));
+        return file_get_contents($url, false, $context);
+    }
+    
+    function getNextPageUrl($dom, $xpath) {
+        $nextActionNode = $xpath->query('//*[@id="nextAnchor"]')->item(0);
+        if ($nextActionNode) {
+            return $nextActionNode->getAttribute('href') . '&p=1';
+        }
+        return null;
+    }
+    
+    function countProductsAndDiscounts($dom, $xpath) {
+        $productNodes = $xpath->query('//article[contains(@class, "product-card vertical")]');
+        $productsCount = $productNodes->length;
+    
+        $soodushindCount = 0;
+        foreach ($productNodes as $productNode) {
+            if (strpos($productNode->textContent, 'Soodushind') !== false) {
+                $soodushindCount++;
+            }
+        }
+    
+        return [$productsCount, $soodushindCount];
+    }
+
+    foreach ($categories as &$cat) {
+        foreach ($cat['sub_categories'] as &$subcat) {
+            foreach ($subcat['sub_items'] as &$bottomitem) {
+                $url = $bottomitem['link'];
+                $productsCount = 0;
+                $soodushindCount = 0;
+            
+                do {
+                    $html = fetchPageContent($url);
+                    $dom = new DOMDocument();
+                    libxml_use_internal_errors(true);
+                    $dom->loadHTML($html);
+                    libxml_clear_errors();
+            
+                    $xpath = new DOMXPath($dom);
+                
+                    $url = getNextPageUrl($dom, $xpath);
+                } while ($url);
+
+                list($pageProductsCount, $pageSoodushindCount) = countProductsAndDiscounts($dom, $xpath);
+                $productsCount += $pageProductsCount;
+                $soodushindCount += $pageSoodushindCount;
+            
+                $bottomitem['productsCount'] = $productsCount;
+                $bottomitem['soodushindCount'] = $soodushindCount;
+            }
+        }
     }
 
     header('Content-Type: application/json');
