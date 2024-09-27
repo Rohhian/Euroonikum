@@ -23,24 +23,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ value: value })
-        }) 
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(error => { throw new Error(error); });
-            }
-            return response.json();
         })
+        .then(response => response.json())
         .then(data => {
-            if (typeof data === 'string' && data.startsWith('Error:')) {
-                throw new Error(data);
-            }
+            populateTable(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
+    function populateTable(data) {
             const table = document.createElement('table');
             table.id = 'categoriesTable';
 
             const header = table.createTHead();
             const headerRow = header.insertRow();
-            const headers = ['Kategooria', 'Alam-kategooria', 'Alam-alam-kategooria', 'Link'];
+            const headers = ['Kategooria', 'Tooteid', 'Alam-kategooria', 'Tooteid', 'Alam-alam-kategooria', 'Tooteid'];
             headers.forEach(text => {
                 const cell = document.createElement('th');
                 cell.textContent = text;
@@ -50,49 +47,51 @@ document.addEventListener('DOMContentLoaded', () => {
             const tableBody = table.createTBody();
 
             data.forEach(category => {
+                const categoryRow = document.createElement('tr');
+                categoryRow.innerHTML = `
+                    <td class="headingrow"><a href="${category.link}">${category.name}</a></td>
+                    <td class="headingrow">kogus</td>
+                    <td class="headingrow"></td>
+                    <td class="headingrow"></td>
+                    <td class="headingrow"></td>
+                    <td class="headingrow"></td>
+                `;
+                tableBody.appendChild(categoryRow);
+    
                 category.sub_categories.forEach(subCategory => {
+                    const subCategoryRow = document.createElement('tr');
+                    subCategoryRow.innerHTML = `
+                        <td></td>
+                        <td></td>
+                        <td class="headingrow"><a href="${subCategory.link}">${subCategory.name}</a></td>
+                        <td class="headingrow">kogus</td>
+                        <td class="headingrow"></td>
+                        <td class="headingrow"></td>
+                    `;
+                    tableBody.appendChild(subCategoryRow);
+    
                     subCategory.sub_items.forEach(subItem => {
-                        const row = document.createElement('tr');
-
-                        const categoryCell = document.createElement('td');
-                        categoryCell.textContent = category.name;
-                        row.appendChild(categoryCell);
-
-                        const subCategoryCell = document.createElement('td');
-                        subCategoryCell.textContent = subCategory.name;
-                        row.appendChild(subCategoryCell);
-
-                        const subItemCell = document.createElement('td');
-                        subItemCell.textContent = subItem.name;
-                        row.appendChild(subItemCell);
-
-                        const linkCell = document.createElement('td');
-                        const link = document.createElement('a');
-                        link.href = subItem.link;
-                        link.textContent = subItem.link;
-                        link.target = '_blank';
-                        linkCell.appendChild(link);
-                        row.appendChild(linkCell);
-
-                        tableBody.appendChild(row);
+                        const subItemRow = document.createElement('tr');
+                        subItemRow.innerHTML = `
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="headingrow"><a href="${subItem.link}">${subItem.name}</a></td>
+                            <td class="headingrow">kogus</td>
+                        `;
+                        tableBody.appendChild(subItemRow);
                     });
                 });
 
                 const blankRow = document.createElement('tr');
                 const blankCell = document.createElement('td');
-                blankCell.colSpan = 4;
+                blankCell.colSpan = 6;
                 blankCell.innerHTML = '&nbsp;';
                 blankRow.appendChild(blankCell);
                 tableBody.appendChild(blankRow);
             });
 
             container.appendChild(table);
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-            const errorMessage = document.createElement('div');
-            errorMessage.textContent = error.message;
-            container.appendChild(errorMessage);
-        });
     }
 });

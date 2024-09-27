@@ -37,3 +37,7 @@ th {
 #table-container h1 {
     margin-right: 10px; /* Add some space between the heading and the button */
 }
+
+.headingrow {
+    background-color: #d4d1d1;
+}
