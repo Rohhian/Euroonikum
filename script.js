@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startScrape(value) {
         const pieChart = initializePieChart();
         const barChart = initializeBarChart();
+        const percentageChart = initializePercentageChart();
 
         const eventSource = new EventSource(`login_router.php?value=${value}`);
 
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (data.id === 'Alam-alam-kategooria') {
                     updateBarChart(barChart, data);
+                    updatePercentageChart(percentageChart, data);
                 }
             }
         };
@@ -148,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'toodete kogus üldiste Kategooriate kaupa',
+                        text: 'erinevate toodete arv üldiste Kategooriate kaupa',
                     },    
                     legend: {
                         position: 'top',
@@ -204,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Discount Count',
+                    label: 'soodushinnaga toodete arv',
                     data: [],
                     backgroundColor: [],
                     borderColor: [],
@@ -270,5 +272,98 @@ document.addEventListener('DOMContentLoaded', () => {
         barChart.data.labels = sortedData.map(item => barChart.data.labels[item.index]);
         barChart.data.datasets[0].data = sortedData.map(item => item.value);
         barChart.update();
+    }
+
+    function initializePercentageChart() {
+        const ctxPercentage = document.getElementById('percentageChart').getContext('2d');
+        const percentageChart = new Chart(ctxPercentage, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'soodushinnaga toodete arv suhtena kategooria toodete arvu',
+                    data: [],
+                    backgroundColor: [],
+                    borderColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%'; // Add percentage symbol to y-axis labels
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '10 suurima sooduspakkumiste arvuga kategooriat - ! Ei ole allahindluse % ! Näitab kui suur osa kategooria toodetest on soodushinnaga',
+                    },
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw + '%'; // Add percentage symbol to tooltip
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        formatter: function(value, context) {
+                            return context.chart.data.labels[context.dataIndex] + '\n' + value + '%';
+                        },
+                        color: '#000',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+        return percentageChart;
+    }
+
+    function updatePercentageChart(percentageChart, data) {
+        const percentage = (data.discountCount / data.productsCount) * 100;
+        const index = percentageChart.data.labels.indexOf(data.name);
+        if (index === -1) {
+            percentageChart.data.labels.push(data.name);
+            percentageChart.data.datasets[0].data.push(percentage.toFixed(2)); // Round to 2 decimal places
+            percentageChart.data.datasets[0].backgroundColor.push('#808080');
+            percentageChart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
+        } else {
+            percentageChart.data.datasets[0].data[index] = percentage.toFixed(2); // Round to 2 decimal places
+        }
+    
+        // Sort the data by percentage in descending order
+        const sortedData = percentageChart.data.datasets[0].data
+            .map((value, index) => ({ value, index }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10); // Get top 10
+    
+        percentageChart.data.labels = sortedData.map(item => percentageChart.data.labels[item.index]);
+        percentageChart.data.datasets[0].data = sortedData.map(item => item.value);
+        percentageChart.update();
     }
 });
