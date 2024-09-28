@@ -4,17 +4,17 @@ table {
 }
 
 #categoriesTable {
-    font-size: 10px;
+    font-family: Arial, Helvetica, sans-serif; 
+    font-size: 12px;
 }
 
 #categoriesTable a {
-    font-size: 10px;
+    font-size: 12px;
 }
 
 #categoriesTable td, #categoriesTable th {
     padding: 2px;
     border: 1px solid #ddd;
-    text-align: left;
 }
 
 #categoriesTable th {
@@ -27,6 +27,7 @@ table {
 }
 
 #header-container {
+    font-family: Arial, Helvetica, sans-serif;
     display: flex;
     align-items: center;
 }
@@ -43,6 +44,25 @@ table {
     background-color: #e7e6e6;
 }
 
+.mainheadingrow {
+    background-color: #8a8a8a;
+    font-weight: bold;
+    color: white;
+}
+
 .pdcount {
     text-align: center;
+}
+
+@keyframes blinkGreen {
+    0% {
+        background-color: green;
+    }
+    100% {
+        background-color: inherit;
+    }
+}
+
+.blink-green {
+    animation: blinkGreen 0.5s ease-in-out;
 }

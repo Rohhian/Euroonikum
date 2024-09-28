@@ -1,5 +1,17 @@
 <?php
 
+header('Content-Type: text/event-stream');
+header('Cache-Control: no-cache');
+header('Connection: keep-alive');
+
+function sendEvent($id, $data) {
+    $data['id'] = $id;
+    //echo "id: $id\n";
+    echo "data: " . json_encode($data) . "\n\n";
+    ob_flush();
+    flush();
+}
+
 $url = file_get_contents('url.txt');
 if ($url === false) {
     die('Error reading the URL from url.txt.');
@@ -69,6 +81,8 @@ function fetchPageContent($url) {
 }
 
 foreach ($categories as &$cat) {
+    sendEvent('Kategooria', $cat);
+
     foreach ($cat['sub_categories'] as &$subcat) {
         $url = $subcat['link'];
         $productsCount = 0;
@@ -101,6 +115,8 @@ foreach ($categories as &$cat) {
         $subcat['productsCount'] = $productsCount;
         $subcat['discountCount'] = $discountCount;
 
+        sendEvent('Alam-kategooria', $subcat);
+
         foreach ($subcat['sub_items'] as &$bottomitem) {
             $url = $bottomitem['link'];
             $productsCount = 0;
@@ -132,9 +148,16 @@ foreach ($categories as &$cat) {
 
             $bottomitem['productsCount'] = $productsCount;
             $bottomitem['discountCount'] = $discountCount;
+
+            sendEvent('Alam-alam-kategooria', $bottomitem);
         }
     }
 }
 
-header('Content-Type: application/json');
-echo json_encode($categories, JSON_PRETTY_PRINT);
+echo "event: end\n";
+echo "data: end\n\n";
+ob_flush();
+flush();
+
+//header('Content-Type: application/json');
+//echo json_encode($categories, JSON_PRETTY_PRINT);

@@ -8,11 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const buttonNormalScrape = document.createElement('button');
     buttonNormalScrape.textContent = 'normal scrape 6m';
-    buttonNormalScrape.addEventListener('click', () => getCategories('normalScrape'));
+    buttonNormalScrape.addEventListener('click', () => startScrape('normalScrape'));
 
     const buttonSlowScrape = document.createElement('button');
     buttonSlowScrape.textContent = 'slow scrape 20m';
-    buttonSlowScrape.addEventListener('click', () => getCategories('slowScrape'));
+    buttonSlowScrape.addEventListener('click', () => startScrape('slowScrape'));
 
     headerContainer.appendChild(heading);
     headerContainer.appendChild(buttonNormalScrape);
@@ -21,23 +21,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('table-container');
     container.appendChild(headerContainer);
 
-    function getCategories(value) {
-        fetch('login_router.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ value: value })
-        })
-        .then(response => response.json())
-        .then(data => {
-            populateTable(data);
-        })
-        .catch(error => console.error('Error:', error));
+    function startScrape(value) {
+        const eventSource = new EventSource(`login_router.php?value=${value}`);
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data === 'end') {
+                eventSource.close();
+            } else {
+                updateTable(data);
+            }
+        };
+
+        eventSource.onerror = function() {
+            console.error('Error occurred while receiving SSE data.');
+            eventSource.close();
+        };
     }
 
-    function populateTable(data) {
-            const table = document.createElement('table');
+    function updateTable(data) {
+        let table = document.getElementById('categoriesTable');
+        if (!table) {
+            table = document.createElement('table');
             table.id = 'categoriesTable';
 
             const header = table.createTHead();
@@ -50,61 +55,76 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const tableBody = table.createTBody();
+            table.appendChild(tableBody);
+            container.appendChild(table);
+        }
 
-            data.forEach(category => {
-                let categorySum = 0;
-                const categoryRow = document.createElement('tr');
-                categoryRow.innerHTML = `
-                    <td class="headingrow">${category.name}</a></td>
-                    <td class="headingrow categorySum"></td>
-                    <td class="headingrow"></td>
-                    <td class="headingrow"></td>
+        const tableBody = table.tBodies[0];
+        const row = document.createElement('tr');
+
+        switch (data.id) {
+            case 'Kategooria':
+                row.innerHTML = `
+                    <td class="mainheadingrow">${data.name}</a></td>
+                    <td class="mainheadingrow categorySum"></td>
+                    <td class="mainheadingrow"></td>
+                    <td class="mainheadingrow"></td>
+                    <td class="mainheadingrow"></td>
+                    <td class="mainheadingrow"></td>
+                    <td class="mainheadingrow"></td>
+                `;
+                tableBody.appendChild(row);
+                categorySumElement = findCategorySumCellBySiblingText(data.name);
+                break;
+            case 'Alam-kategooria':
+                row.innerHTML = `
+                    <td></td>
+                    <td></td>
+                    <td class="headingrow"><a href="${data.link}">${data.name}</a></td>
+                    <td class="headingrow">${data.productsCount}</td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
                 `;
-                tableBody.appendChild(categoryRow);
-
-                const categorySumElement = categoryRow.querySelector('.categorySum');
-    
-                category.sub_categories.forEach(subCategory => {
-                    categorySum = categorySum + subCategory.productsCount;
+                tableBody.appendChild(row);
+                if (categorySumElement) {
+                    categorySum = parseInt(categorySumElement.innerHTML) || 0;
+                    categorySum += data.productsCount;
                     categorySumElement.innerHTML = `${categorySum}`;
-                    const subCategoryRow = document.createElement('tr');
-                    subCategoryRow.innerHTML = `
-                        <td></td>
-                        <td></td>
-                        <td class="headingrow"><a href="${subCategory.link}">${subCategory.name}</a></td>
-                        <td class="headingrow">${subCategory.productsCount}</td>
-                        <td class="headingrow"></td>
-                        <td class="headingrow"></td>
-                        <td class="headingrow"></td>
-                    `;
-                    tableBody.appendChild(subCategoryRow);
-    
-                    subCategory.sub_items.forEach(subItem => {
-                        const subItemRow = document.createElement('tr');
-                        subItemRow.innerHTML = `
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td class="headingrow"><a href="${subItem.link}">${subItem.name}</a></td>
-                            <td class="headingrow pdcount">${subItem.productsCount}</td>
-                            <td class="headingrow pdcount">${subItem.discountCount}</td>
-                        `;
-                        tableBody.appendChild(subItemRow);
-                    });
-                });
+                    categorySumElement.classList.add('blink-green');
+                    setTimeout(() => {
+                        categorySumElement.classList.remove('blink-green');
+                    }, 200);
+                }
+                break;
+            case 'Alam-alam-kategooria':
+                row.innerHTML = `
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="headingrow"><a href="${data.link}">${data.name}</a></td>
+                    <td class="headingrow pdcount">${data.productsCount}</td>
+                    <td class="headingrow pdcount">${data.discountCount}</td>
+                `;
+                tableBody.appendChild(row);
+                break;
+        }
+    }
 
-                const blankRow = document.createElement('tr');
-                const blankCell = document.createElement('td');
-                blankCell.colSpan = 7;
-                blankCell.innerHTML = '&nbsp;';
-                blankRow.appendChild(blankCell);
-                tableBody.appendChild(blankRow);
-            });
-
-            container.appendChild(table);
+    function findCategorySumCellBySiblingText(siblingText) {
+        const rows = document.querySelectorAll("#categoriesTable > tbody > tr");
+        for (let row of rows) {
+            const cells = row.querySelectorAll("td");
+            for (let cell of cells) {
+                if (cell.textContent.trim() === siblingText) {
+                    const categorySumCell = row.querySelector("td.mainheadingrow.categorySum");
+                    if (categorySumCell) {
+                        return categorySumCell;
+                    }
+                }
+            }
+        }
+        return null;
     }
 });

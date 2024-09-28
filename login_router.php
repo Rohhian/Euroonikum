@@ -13,6 +13,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($value === 'slowScrape') {
         require_once 'scraperSlowNextPage.php';
     }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $value = $_GET['value'] ?? null;
+
+    if (!$value) {
+        echo "event: error\n";
+        echo "data: Error: Missing value parameter.\n\n";
+        ob_flush();
+        flush();
+        exit();
+    } elseif ($value === 'normalScrape') {
+        require_once 'scraperNormal.php';
+    } elseif ($value === 'slowScrape') {
+        require_once 'scraperSlowNextPage.php';
+    }
 } else {
     echo json_encode('Error: Invalid request method.');
     die();
