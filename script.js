@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('buttonNormalScrape').addEventListener('click', () => startScrape('normalScrape'));
-    document.getElementById('buttonSlowScrape').addEventListener('click', () => startScrape('slowScrape'));
 
     const container = document.getElementById('table-container');
 

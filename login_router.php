@@ -10,8 +10,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     } elseif ($value === 'normalScrape') {
         require_once 'scraperNormal.php';
-    } elseif ($value === 'slowScrape') {
-        require_once 'scraperSlowNextPage.php';
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $value = $_GET['value'] ?? null;
@@ -24,8 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     } elseif ($value === 'normalScrape') {
         require_once 'scraperNormal.php';
-    } elseif ($value === 'slowScrape') {
-        require_once 'scraperSlowNextPage.php';
     }
 } else {
     echo json_encode('Error: Invalid request method.');
