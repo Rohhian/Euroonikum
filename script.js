@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 updateTable(data);
                 if (data.id === 'Kategooria') {
+                    mainCategorySum = 0;
                     mainCategoryName = data.name;
                 }
                 if (data.id === 'Alam-kategooria') {
