@@ -3,8 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('buttonNormalScrape').addEventListener('click', () => startScrape('normalScrape'));
 
     const container = document.getElementById('table-container');
+    const scrapeStatus = document.getElementById('scrapingMessage');
 
     function startScrape(value) {
+        scrapeStatus.textContent = 'Scraping in progress...';
+        scrapeStatus.classList.add('blink-white-green');
+        scrapeStatus.classList.remove('scraping-finished');
+
         const pieChart = initializePieChart();
         const barChart = initializeBarChart();
         const percentageChart = initializePercentageChart();
@@ -18,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = JSON.parse(event.data);
             if (data === 'end') {
                 eventSource.close();
+                scrapeStatus.textContent = 'Scraping finished';
+                scrapeStatus.classList.remove('blink-white-green');
+                scrapeStatus.classList.add('scraping-finished');
             } else {
                 updateTable(data);
                 if (data.id === 'Kategooria') {
@@ -38,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
         eventSource.onerror = function() {
             console.error('Error occurred while receiving SSE data.');
             eventSource.close();
+            scrapeStatus.textContent = 'Scraping finished';
+            scrapeStatus.classList.remove('blink-white-green');
+            scrapeStatus.classList.add('scraping-finished');
         };
     }
 

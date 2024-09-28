@@ -99,3 +99,23 @@ table {
 .blink-green {
     animation: blinkGreen 0.5s ease-in-out;
 }
+
+@keyframes blinkWhiteGreen {
+    0% {
+        background-color: white;
+    }
+    50% {
+        background-color: lightgreen;
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+.blink-white-green {
+    animation: blinkWhiteGreen 2s infinite;
+}
+
+.scraping-finished {
+    background-color: white;
+}
