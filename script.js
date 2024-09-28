@@ -1,25 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const headerContainer = document.createElement('div');
-    headerContainer.id = 'header-container';
-
-    const heading = document.createElement('h1');
-    heading.textContent = 'Euronics e-poe toodete kategooriad';
-
-    const buttonNormalScrape = document.createElement('button');
-    buttonNormalScrape.textContent = 'normal scrape 6m';
-    buttonNormalScrape.addEventListener('click', () => startScrape('normalScrape'));
-
-    const buttonSlowScrape = document.createElement('button');
-    buttonSlowScrape.textContent = 'slow scrape 20m';
-    buttonSlowScrape.addEventListener('click', () => startScrape('slowScrape'));
-
-    headerContainer.appendChild(heading);
-    headerContainer.appendChild(buttonNormalScrape);
-    headerContainer.appendChild(buttonSlowScrape);
+    document.getElementById('buttonNormalScrape').addEventListener('click', () => startScrape('normalScrape'));
+    document.getElementById('buttonSlowScrape').addEventListener('click', () => startScrape('slowScrape'));
 
     const container = document.getElementById('table-container');
-    container.appendChild(headerContainer);
 
     function startScrape(value) {
         const eventSource = new EventSource(`login_router.php?value=${value}`);
@@ -95,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => {
                         categorySumElement.classList.remove('blink-green');
                     }, 200);
+                    const categoryName = categorySumElement.closest('tr').querySelector('td.mainheadingrow').textContent.trim();
+                    updateChart(categoryName, categorySum);
                 }
                 break;
             case 'Alam-alam-kategooria':
@@ -126,5 +112,67 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         return null;
+    }
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: [], // Initialize with empty labels
+            datasets: [{
+                label: 'Products Count',
+                data: [], // Initialize with empty data
+                backgroundColor: [], // Initialize with empty colors
+                borderColor: [],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.raw !== null) {
+                                label += context.raw;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    function updateChart(categoryName, categorySum) {
+        const index = chart.data.labels.indexOf(categoryName);
+        if (index === -1) {
+            // Add new category
+            chart.data.labels.push(categoryName);
+            chart.data.datasets[0].data.push(categorySum);
+            chart.data.datasets[0].backgroundColor.push(getRandomColor());
+            chart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
+        } else {
+            // Update existing category
+            chart.data.datasets[0].data[index] = categorySum;
+        }
+        chart.update();
+    }
+
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
     }
 });

@@ -6,7 +6,6 @@ header('Connection: keep-alive');
 
 function sendEvent($id, $data) {
     $data['id'] = $id;
-    //echo "id: $id\n";
     echo "data: " . json_encode($data) . "\n\n";
     ob_flush();
     flush();
@@ -158,6 +157,3 @@ echo "event: end\n";
 echo "data: end\n\n";
 ob_flush();
 flush();
-
-//header('Content-Type: application/json');
-//echo json_encode($categories, JSON_PRETTY_PRINT);
