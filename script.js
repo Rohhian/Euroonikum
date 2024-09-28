@@ -5,7 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('table-container');
 
     function startScrape(value) {
+        const pieChart = initializePieChart();
+        const barChart = initializeBarChart();
+
         const eventSource = new EventSource(`login_router.php?value=${value}`);
+
+        let mainCategoryName = '';
+        let mainCategorySum = 0;
 
         eventSource.onmessage = function(event) {
             const data = JSON.parse(event.data);
@@ -13,6 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 eventSource.close();
             } else {
                 updateTable(data);
+                if (data.id === 'Kategooria') {
+                    mainCategoryName = data.name;
+                }
+                if (data.id === 'Alam-kategooria') {
+                    mainCategorySum = mainCategorySum + data.productsCount;
+                    updatePieChart(pieChart, mainCategoryName, mainCategorySum);
+                }
+                if (data.id === 'Alam-alam-kategooria') {
+                    updateBarChart(barChart, data);
+                }
             }
         };
 
@@ -79,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         categorySumElement.classList.remove('blink-green');
                     }, 200);
                     const categoryName = categorySumElement.closest('tr').querySelector('td.mainheadingrow').textContent.trim();
-                    updateChart(categoryName, categorySum);
                 }
                 break;
             case 'Alam-alam-kategooria':
@@ -113,57 +128,64 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    const ctx = document.getElementById('chart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: [], // Initialize with empty labels
-            datasets: [{
-                label: 'Products Count',
-                data: [], // Initialize with empty data
-                backgroundColor: [], // Initialize with empty colors
-                borderColor: [],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
+    function initializePieChart() {
+        const ctx = document.getElementById('chart').getContext('2d');
+        const pieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [], // Initialize with empty labels
+                datasets: [{
+                    label: 'Products Count',
+                    data: [], // Initialize with empty data
+                    backgroundColor: [], // Initialize with empty colors
+                    borderColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'toodete kogus üldiste Kategooriate kaupa',
+                    },    
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw;
+                                }
+                                return label;
                             }
-                            if (context.raw !== null) {
-                                label += context.raw;
-                            }
-                            return label;
                         }
                     }
                 }
             }
-        }
-    });
+        });
+        return pieChart;
+    }
 
-    function updateChart(categoryName, categorySum) {
-        const index = chart.data.labels.indexOf(categoryName);
+    function updatePieChart(pieChart, categoryName, categorySum) {
+        const index = pieChart.data.labels.indexOf(categoryName);
         if (index === -1) {
             // Add new category
-            chart.data.labels.push(categoryName);
-            chart.data.datasets[0].data.push(categorySum);
-            chart.data.datasets[0].backgroundColor.push(getRandomColor());
-            chart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
+            pieChart.data.labels.push(categoryName);
+            pieChart.data.datasets[0].data.push(categorySum);
+            pieChart.data.datasets[0].backgroundColor.push(getRandomColor());
+            pieChart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
         } else {
             // Update existing category
-            chart.data.datasets[0].data[index] = categorySum;
+            pieChart.data.datasets[0].data[index] = categorySum;
         }
-        chart.update();
+        pieChart.update();
     }
 
     function getRandomColor() {
@@ -173,5 +195,80 @@ document.addEventListener('DOMContentLoaded', () => {
             color += letters[Math.floor(Math.random() * 16)];
         }
         return color;
+    }
+
+    function initializeBarChart() {
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        const barChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Discount Count',
+                    data: [],
+                    backgroundColor: [],
+                    borderColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                    display: true,
+                    text: '10 suurima sooduspakkumiste arvuga kategooriat',
+                },
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return barChart;
+    }
+
+    function updateBarChart(barChart, data) {
+        const index = barChart.data.labels.indexOf(data.name);
+        if (index === -1) {
+            barChart.data.labels.push(data.name);
+            barChart.data.datasets[0].data.push(data.discountCount);
+            barChart.data.datasets[0].backgroundColor.push('#808080');
+            barChart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
+        } else {
+            barChart.data.datasets[0].data[index] = data.discountCount;
+        }
+
+        // Sort the data by discountCount in descending order
+        const sortedData = barChart.data.datasets[0].data
+            .map((value, index) => ({ value, index }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10); // Get top 10
+
+        barChart.data.labels = sortedData.map(item => barChart.data.labels[item.index]);
+        barChart.data.datasets[0].data = sortedData.map(item => item.value);
+        barChart.update();
     }
 });
