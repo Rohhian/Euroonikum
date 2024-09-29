@@ -1,17 +1,10 @@
 <?php
 
 set_time_limit(0);
+header('Content-Type: text/event-stream');
+header('Cache-Control: no-cache');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    $value = $input['value'] ?? null;
-
-    if (!$value) {
-        exit();
-    } elseif ($value === 'normalScrape') {
-        require_once 'scraperNormal.php';
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $value = $_GET['value'] ?? null;
 
     if (!$value) {

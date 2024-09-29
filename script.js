@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.innerHTML = `
                     <td></td>
                     <td></td>
-                    <td class="headingrow"><a href="${data.link}">${data.name}</a></td>
+                    <td class="headingrow"><a target='_blank' href="${data.link}">${data.name}</a></td>
                     <td class="headingrow">${data.productsCount}</td>
                     <td class="headingrow"></td>
                     <td class="headingrow"></td>
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="headingrow"><a href="${data.link}">${data.name}</a></td>
+                    <td class="headingrow"><a target='_blank' href="${data.link}">${data.name}</a></td>
                     <td class="headingrow pdcount">${data.productsCount}</td>
                     <td class="headingrow pdcount">${data.discountCount}</td>
                 `;
