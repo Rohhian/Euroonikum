@@ -16,6 +16,7 @@ require 'auth.php';
         <div id="header-container">
             <h1>Euronics e-poe toodete kategooriad</h1>
             <button id="buttonNormalScrape">start scrape</button>
+            <button id="buttonLogout">Logout</button>
             <div id="scrapingMessage" class="blink-white-green"></div>
         </div>
         <div id="content-inner-container">

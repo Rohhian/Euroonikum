@@ -79,6 +79,19 @@ export function startScrape(value) {
         }
     };
 
+    document.getElementById('buttonLogout').addEventListener('click', function() {
+        // Close the EventSource connection before logging out
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        fetch('logout.php')
+            .then(response => response.json())
+            .then(data => {
+                window.location.href = 'login.html';
+            });
+    });
+
     window.addEventListener('beforeunload', () => {
         if (eventSource) {
             eventSource.close();
