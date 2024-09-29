@@ -43,6 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        eventSource.addEventListener('end', function(event) {
+            console.log('Stream closed by the server.');
+            eventSource.close();
+            scrapeStatus.textContent = 'Scraping finished';
+            scrapeStatus.classList.remove('blink-white-green');
+            scrapeStatus.classList.add('scraping-finished');
+        });
+
         eventSource.onerror = function(event) {
             console.error('Error occurred while receiving SSE data: ', event);
             eventSource.close();
