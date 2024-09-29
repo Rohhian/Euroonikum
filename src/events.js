@@ -41,7 +41,7 @@ export function startScrape(value) {
         }
     };
 
-    eventSource.addEventListener('end', function(event) {
+    eventSource.addEventListener('end', function() {
         console.log('Stream closed by the server.');
         eventSource.close();
         scrapeStatus.textContent = 'Scraping finished';
