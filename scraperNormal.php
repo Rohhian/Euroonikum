@@ -1,9 +1,5 @@
 <?php
 
-header('Content-Type: text/event-stream');
-header('Cache-Control: no-cache');
-header('Connection: keep-alive');
-
 function sendEvent($id, $data) {
     $data['id'] = $id;
     echo "data: " . json_encode($data) . "\n\n";
