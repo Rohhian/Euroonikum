@@ -6,17 +6,21 @@ header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 
-function handleError($message) {
-    echo "event: error\n";
-    echo "data: $message\n\n";
-    ob_flush();
-    flush();
-    exit();
+validateRequestMethod();
+$value = getValueParameter();
+handleRequest($value);
+
+function validateRequestMethod() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        handleError('Error: Invalid request method.');
+    }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $value = $_GET['value'] ?? null;
+function getValueParameter() {
+    return $_GET['value'] ?? null;
+}
 
+function handleRequest($value) {
     if (!$value) {
         handleError('Error: Missing value parameter.');
     } elseif ($value === 'normalScrape') {
@@ -24,7 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } else {
         handleError('Error: Invalid value parameter.');
     }
-} else {
-    echo json_encode('Error: Invalid request method.');
-    die();
+}
+
+function handleError($message) {
+    echo json_encode(['error' => $message]);
+    exit();
 }

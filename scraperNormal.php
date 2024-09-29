@@ -1,5 +1,15 @@
 <?php
 
+$url = fetchUrlContent('url.txt');
+$html = fetchHtmlContent($url);
+$dom = initializeDomDocument($html);
+$xpath = new DOMXPath($dom);
+$categories = getCategories($xpath);
+
+foreach ($categories as &$category) {
+    processCategory($category);
+}
+
 function sendEvent($id, $data) {
     $data['id'] = $id;
     echo "data: " . json_encode($data) . "\n\n";
@@ -7,63 +17,134 @@ function sendEvent($id, $data) {
     flush();
 }
 
-$url = file_get_contents('url.txt');
-if ($url === false) {
-    die('Error reading the URL from url.txt.');
+function fetchUrlContent($filePath) {
+    $url = file_get_contents($filePath);
+    if ($url === false) {
+        die('Error reading the URL from ' . $filePath);
+    }
+    return trim($url);
 }
-$html = file_get_contents(trim($url));
-if ($html === false) {
-    die('Error fetching the HTML content.');
+
+function fetchHtmlContent($url) {
+    $html = file_get_contents($url);
+    if ($html === false) {
+        die('Error fetching the HTML content.');
+    }
+    return $html;
 }
 
-$dom = new DOMDocument();
-libxml_use_internal_errors(true);
-$dom->loadHTML($html);
-libxml_clear_errors();
+function initializeDomDocument($html) {
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML($html);
+    libxml_clear_errors();
+    return $dom;
+}
 
-$xpath = new DOMXPath($dom);
-$categories = [];
-$mainItems = $xpath->query("//li[contains(@class, 'main-nav__item')][contains(@data-responsive-panel-target, 'sub-menu')]");
+function getCategories($xpath) {
+    $categories = [];
+    $mainItems = $xpath->query("//li[contains(@class, 'main-nav__item')][contains(@data-responsive-panel-target, 'sub-menu')]");
 
-foreach ($mainItems as $item) {
-    $categoryNode = $xpath->query('.//h2[contains(@class, "sub-menu__title")]', $item)->item(0);
-    $categoryName = $categoryNode ? trim($categoryNode->nodeValue) : '';
+    foreach ($mainItems as $item) {
+        $categoryName = getCategoryName($xpath, $item);
+        $subCategories = [];
 
-    $subCategories = [];
-    $subMenu = $xpath->query('.//div[contains(@class, "sub-menu")]', $item);
-
-    if ($subMenu->length > 0) {
-        $subMenuBlocks = $xpath->query('.//div[contains(@class, "sub-menu__block")]', $subMenu->item(0));
-
-        foreach ($subMenuBlocks as $subBlock) {
-            $subCategoryName = trim($xpath->query('.//a[contains(@class, "sub-menu__block-heading")]', $subBlock)->item(0)->nodeValue);
-            $subCategoryLink = $xpath->query('.//a[contains(@class, "sub-menu__block-heading")]', $subBlock)->item(0)->getAttribute('href');
-
-            $bottomItems = [];
-            $bottomLevelLinks = $xpath->query('.//li[contains(@class, "bottom-level__item")]/a[contains(@class, "bottom-level__item__title")]', $subBlock);
-            foreach ($bottomLevelLinks as $bottomLink) {
-                if (strpos($bottomLink->nodeValue, 'õik') !== false) {
-                    continue;
-                }
-                $bottomItem = [
-                    'name' => trim($bottomLink->nodeValue),
-                    'link' => ($bottomLink instanceof DOMElement) ? $bottomLink->getAttribute('href') : '',
-                ];
-                $bottomItems[] = $bottomItem;
-            }
-
-            $subCategories[] = [
-                'name' => $subCategoryName,
-                'link' => $subCategoryLink,
-                'sub_items' => $bottomItems,
-            ];
+        $subMenu = $xpath->query('.//div[contains(@class, "sub-menu")]', $item);
+        if ($subMenu->length > 0) {
+            $subCategories = getSubCategories($xpath, $subMenu);
         }
+
+        $categories[] = [
+            'name' => $categoryName,
+            'sub_categories' => $subCategories,
+        ];
     }
 
-    $categories[] = [
-        'name' => $categoryName,
-        'sub_categories' => $subCategories,
-    ];
+    return $categories;
+}
+
+function getCategoryName($xpath, $item) {
+    $categoryNode = $xpath->query('.//h2[contains(@class, "sub-menu__title")]', $item)->item(0);
+    return $categoryNode ? trim($categoryNode->nodeValue) : '';
+}
+
+function getSubCategories($xpath, $subMenu) {
+    $subCategories = [];
+    $subMenuBlocks = $xpath->query('.//div[contains(@class, "sub-menu__block")]', $subMenu->item(0));
+
+    foreach ($subMenuBlocks as $subBlock) {
+        $subCategoryName = trim($xpath->query('.//a[contains(@class, "sub-menu__block-heading")]', $subBlock)->item(0)->nodeValue);
+        $subCategoryLink = $xpath->query('.//a[contains(@class, "sub-menu__block-heading")]', $subBlock)->item(0)->getAttribute('href');
+        $bottomItems = getBottomItems($xpath, $subBlock);
+
+        $subCategories[] = [
+            'name' => $subCategoryName,
+            'link' => $subCategoryLink,
+            'sub_items' => $bottomItems,
+        ];
+    }
+
+    return $subCategories;
+}
+
+function getBottomItems($xpath, $subBlock) {
+    $bottomItems = [];
+    $bottomLevelLinks = $xpath->query('.//li[contains(@class, "bottom-level__item")]/a[contains(@class, "bottom-level__item__title")]', $subBlock);
+
+    foreach ($bottomLevelLinks as $bottomLink) {
+        if (strpos($bottomLink->nodeValue, 'õik') !== false) {
+            continue;
+        }
+        $bottomItem = [
+            'name' => trim($bottomLink->nodeValue),
+            'link' => ($bottomLink instanceof DOMElement) ? $bottomLink->getAttribute('href') : '',
+        ];
+        $bottomItems[] = $bottomItem;
+    }
+
+    return $bottomItems;
+}
+
+function processCategory(&$category) {
+    sendEvent('Kategooria', $category);
+
+    foreach ($category['sub_categories'] as &$subCategory) {
+        processSubCategory($subCategory);
+    }
+}
+
+function processSubCategory(&$subCategory) {
+    $url = $subCategory['link'];
+    $xpath = fetchAndParsePage($url);
+
+    $subCategory['productsCount'] = getCountFromXPath($xpath, '//h2[normalize-space(text())="Filtreeri tooteid"]/span[@class="counter"]');
+    $subCategory['discountCount'] = getCountFromXPath($xpath, '//label[normalize-space(text())="Sooduspakkumised"]/span[@class="counter"]');
+
+    sendEvent('Alam-kategooria', $subCategory);
+
+    foreach ($subCategory['sub_items'] as &$bottomItem) {
+        processBottomItem($bottomItem);
+    }
+}
+
+function processBottomItem(&$bottomItem) {
+    $url = $bottomItem['link'];
+    $xpath = fetchAndParsePage($url);
+
+    $bottomItem['productsCount'] = getCountFromXPath($xpath, '//h2[normalize-space(text())="Filtreeri tooteid"]/span[@class="counter"]');
+    $bottomItem['discountCount'] = getCountFromXPath($xpath, '//label[normalize-space(text())="Sooduspakkumised"]/span[@class="counter"]');
+
+    sendEvent('Alam-alam-kategooria', $bottomItem);
+}
+
+
+function fetchAndParsePage($url) {
+    $html = fetchPageContent($url);
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML($html);
+    libxml_clear_errors();
+    return new DOMXPath($dom);
 }
 
 function fetchPageContent($url) {
@@ -75,78 +156,16 @@ function fetchPageContent($url) {
     return file_get_contents($url, false, $context);
 }
 
-foreach ($categories as &$cat) {
-    sendEvent('Kategooria', $cat);
-
-    foreach ($cat['sub_categories'] as &$subcat) {
-        $url = $subcat['link'];
-        $productsCount = 0;
-        $discountCount = 0;
-    
-        $html = fetchPageContent($url);
-        $dom = new DOMDocument();
-        libxml_use_internal_errors(true);
-        $dom->loadHTML($html);
-        libxml_clear_errors();
-
-        $xpath = new DOMXPath($dom);
-
-        $productsCountNode = $xpath->query('//h2[normalize-space(text())="Filtreeri tooteid"]/span[@class="counter"]');
-        if ($productsCountNode->length > 0) {
-            $productsCountText = $productsCountNode->item(0)->nodeValue;
-            $productsCountText = trim($productsCountText);
-            $productsCountText = preg_replace('/[()]/', '', $productsCountText);
-            $productsCount = (int)($productsCountText);
-        }
-
-        $discountsCountNode = $xpath->query('//label[normalize-space(text())="Sooduspakkumised"]/span[@class="counter"]');
-        if ($discountsCountNode->length > 0) {
-            $discountsCountText = $discountsCountNode->item(0)->nodeValue;
-            $discountsCountText = trim($discountsCountText);
-            $discountsCountText = preg_replace('/[()]/', '', $discountsCountText);
-            $discountCount = (int)($discountsCountText);
-        }
-
-        $subcat['productsCount'] = $productsCount;
-        $subcat['discountCount'] = $discountCount;
-
-        sendEvent('Alam-kategooria', $subcat);
-
-        foreach ($subcat['sub_items'] as &$bottomitem) {
-            $url = $bottomitem['link'];
-            $productsCount = 0;
-            $discountCount = 0;
-        
-            $html = fetchPageContent($url);
-            $dom = new DOMDocument();
-            libxml_use_internal_errors(true);
-            $dom->loadHTML($html);
-            libxml_clear_errors();
-
-            $xpath = new DOMXPath($dom);
-
-            $productsCountNode = $xpath->query('//h2[normalize-space(text())="Filtreeri tooteid"]/span[@class="counter"]');
-            if ($productsCountNode->length > 0) {
-                $productsCountText = $productsCountNode->item(0)->nodeValue;
-                $productsCountText = trim($productsCountText);
-                $productsCountText = preg_replace('/[()]/', '', $productsCountText);
-                $productsCount = (int)($productsCountText);
-            }
-
-            $discountsCountNode = $xpath->query('//label[normalize-space(text())="Sooduspakkumised"]/span[@class="counter"]');
-            if ($discountsCountNode->length > 0) {
-                $discountsCountText = $discountsCountNode->item(0)->nodeValue;
-                $discountsCountText = trim($discountsCountText);
-                $discountsCountText = preg_replace('/[()]/', '', $discountsCountText);
-                $discountCount = (int)($discountsCountText);
-            }
-
-            $bottomitem['productsCount'] = $productsCount;
-            $bottomitem['discountCount'] = $discountCount;
-
-            sendEvent('Alam-alam-kategooria', $bottomitem);
-        }
+function getCountFromXPath($xpath, $query) {
+    $count = 0;
+    $countNode = $xpath->query($query);
+    if ($countNode->length > 0) {
+        $countText = $countNode->item(0)->nodeValue;
+        $countText = trim($countText);
+        $countText = preg_replace('/[()]/', '', $countText);
+        $count = (int)($countText);
     }
+    return $count;
 }
 
 echo "event: end\n";
