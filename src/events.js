@@ -78,4 +78,10 @@ export function startScrape(value) {
             window.open(link, '_blank');
         }
     };
+
+    window.addEventListener('beforeunload', () => {
+        if (eventSource) {
+            eventSource.close();
+        }
+    });
 }
