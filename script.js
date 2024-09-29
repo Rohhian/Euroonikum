@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        eventSource.onerror = function() {
-            console.error('Error occurred while receiving SSE data.');
+        eventSource.onerror = function(event) {
+            console.error('Error occurred while receiving SSE data: ', event);
             eventSource.close();
             scrapeStatus.textContent = 'Scraping finished';
             scrapeStatus.classList.remove('blink-white-green');
