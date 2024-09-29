@@ -50,6 +50,28 @@ document.addEventListener('DOMContentLoaded', () => {
             scrapeStatus.classList.remove('blink-white-green');
             scrapeStatus.classList.add('scraping-finished');
         };
+
+            // Add click event listener to BarChart
+        document.getElementById('barChart').onclick = function(evt) {
+            const activePoints = barChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+            if (activePoints.length > 0) {
+                const firstPoint = activePoints[0];
+                const label = barChart.data.labels[firstPoint.index];
+                const link = barChart.data.datasets[0].links[firstPoint.index];
+                window.open(link, '_blank');
+            }
+        };
+
+        // Add click event listener to PercentageChart
+        document.getElementById('percentageChart').onclick = function(evt) {
+            const activePoints = percentageChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+            if (activePoints.length > 0) {
+                const firstPoint = activePoints[0];
+                const label = percentageChart.data.labels[firstPoint.index];
+                const link = percentageChart.data.datasets[0].links[firstPoint.index];
+                window.open(link, '_blank');
+            }
+        };
     }
 
     function updateTable(data) {
@@ -271,8 +293,11 @@ document.addEventListener('DOMContentLoaded', () => {
             barChart.data.datasets[0].data.push(data.discountCount);
             barChart.data.datasets[0].backgroundColor.push('#808080');
             barChart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
+            barChart.data.datasets[0].links = barChart.data.datasets[0].links || [];
+            barChart.data.datasets[0].links.push(data.link);
         } else {
             barChart.data.datasets[0].data[index] = data.discountCount;
+            barChart.data.datasets[0].links[index] = data.link;
         }
 
         // Sort the data by discountCount in descending order
@@ -283,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         barChart.data.labels = sortedData.map(item => barChart.data.labels[item.index]);
         barChart.data.datasets[0].data = sortedData.map(item => item.value);
+        barChart.data.datasets[0].links = sortedData.map(item => barChart.data.datasets[0].links[item.index]);
         barChart.update();
     }
 
@@ -364,8 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
             percentageChart.data.datasets[0].data.push(percentage.toFixed(2)); // Round to 2 decimal places
             percentageChart.data.datasets[0].backgroundColor.push('#808080');
             percentageChart.data.datasets[0].borderColor.push('rgba(255, 255, 255, 1)');
+            percentageChart.data.datasets[0].links = percentageChart.data.datasets[0].links || [];
+            percentageChart.data.datasets[0].links.push(data.link);
         } else {
             percentageChart.data.datasets[0].data[index] = percentage.toFixed(2); // Round to 2 decimal places
+            percentageChart.data.datasets[0].links[index] = data.link;
         }
     
         // Sort the data by percentage in descending order
@@ -376,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         percentageChart.data.labels = sortedData.map(item => percentageChart.data.labels[item.index]);
         percentageChart.data.datasets[0].data = sortedData.map(item => item.value);
+        percentageChart.data.datasets[0].links = sortedData.map(item => percentageChart.data.datasets[0].links[item.index]);
         percentageChart.update();
     }
 });
