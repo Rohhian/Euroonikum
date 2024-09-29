@@ -12,7 +12,7 @@ export function startScrape(value) {
     const barChart = initializeBarChart();
     const percentageChart = initializePercentageChart();
 
-    const eventSource = new EventSource(`login_router.php?value=${value}`);
+    const eventSource = new EventSource(`scrape_router.php?value=${value}`);
 
     let mainCategoryName = '';
     let mainCategorySum = 0;
